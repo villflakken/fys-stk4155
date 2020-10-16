@@ -53,7 +53,7 @@ def compute_n_predictors_2dim(n_poly):
     """
     # l = int((n_poly+1)*(n_poly+2)/2)    # Morten's code example
     l = np.sum(np.arange(n_poly+2))     # A quick rephrasing
-    # #* ^ Curious for a generalized method, I attempted to rephrase Morten's example:
+    # #*   Curious for a generalized method, I attempted to rephrase Morten's example
     # #* to apply with more than 2 dimensions of data (our case: x & y)
     # l_gen = np.prod([(n_poly + i)/i for i in range(1, n_data_dimensions+1)])
     # # ^ but this failed both for n_data_dimensions = 1 and 3,
@@ -94,7 +94,7 @@ def my_little_scaler(input_matrix, input_array):
     return output_matrix, output_array
 
 
-def my_train_test_splitter(X_mat, y_arr, test_size, seed=None):
+def my_train_test_splitter(X_mat, y_arr, test_size=0.2, seed=None):
     """
     My own formulation on how to train, test, and split the data.
         X_mat       :   n-times-p Design matrix, 
@@ -120,6 +120,23 @@ def my_train_test_splitter(X_mat, y_arr, test_size, seed=None):
     X_mat_test = X_mat[test_indexes].copy()  # unless copied like here.
     y_arr_test = y_arr[test_indexes].copy()
     return X_mat_train, X_mat_test, y_arr_train, y_arr_test, train_indexes, test_indexes
+
+
+def compute_train_test_indexes(n_rows, test_size=0.2, seed=None):
+    """
+    Simplified version of `my_train_test_splitter`.
+    """
+    indexes = np.arange(n_rows)
+    # Create row indeces and shuffle them
+    if seed != None:
+        np.random.seed(seed)
+        pass
+    np.random.shuffle(indexes)
+    # Extract indexes for each type
+    test_index_begins = int(test_size*float(n_rows))
+    train_indexes = indexes[test_index_begins:]
+    test_indexes = indexes[:test_index_begins]
+    return train_indexes, test_indexes
 
 
 def compute_beta_OLS(X_mat, y_arr):
@@ -179,3 +196,5 @@ def my_Ridge_regression(X_mat, y_arr, lambda_):
     y_pred_Ridge = X_mat @ beta_Ridge
     return XTX_Ridge, beta_Ridge, y_pred_Ridge
 
+if __name__ == "__main__":
+    pass

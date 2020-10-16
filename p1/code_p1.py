@@ -69,10 +69,12 @@ def print_comparison_designX_details(X_mat, y_arr):
 
 def part_a(seed):
     """
-    Part a) of the assignment, or, alternatively:
+        Part a) of the assignment, or, alternatively:
     How to train your drago--- I mean, regression model
 
-    Constitutes script to execute Part a)'s necessary operations 
+        Constitutes script to execute Part a)'s necessary operations.
+        Variable name declaration might have been excessively explicit;
+    actually caused me headaches later.
     """
     #* Declaring component variables and data
     n_poly = 5      # Polynomial size
@@ -94,17 +96,18 @@ def part_a(seed):
     z_data_1d = np.ravel(z)
 
     #* Make a plot to visualize z
-    pf.plot_FrankeFunction(x, y, z)
+    # pf.plot_FrankeFunction(x, y, z)
     # plt.show()
 
     #* Create design matrix and beta
     my_X = mf.create_X_2dim(x_data_1d, y_data_1d, n_poly)
     my_X_OLS = my_X.copy()
+    print(f"(a): X.shape = {my_X_OLS.shape}")
     # ^ Declare a copy of X as a precaution, so the original is not 
     #     perturbed/modified unintended w.r.t. view/scope in functions.
     beta_OLS = mf.compute_beta_OLS(X_mat=my_X_OLS, y_arr=z_data_1d)
     ztilde_OLS = my_X_OLS @ beta_OLS # predicted model's values
-    print(beta_OLS.shape)
+    print(f"(a): beta.shape = {beta_OLS.shape}")
 
     #* Confidence intervals
     mf.confidence_interval_sample(my_X_OLS, beta_OLS, z_data_1d, ztilde_OLS,
@@ -128,9 +131,9 @@ def part_a(seed):
     # ^ the last one's the one we're mostly interested in, I think
 
     if True == 1:
-        print(f"--- --- ---\n",
-            f"n_len   : {n_len}",
-            f"p_len   : {p_len}")
+        print(f"(a):--- --- ---\n",
+            f"n_len   = {n_len}",
+            f"p_len   = {p_len}")
         # print(" my_X:")
         # print("my_X_OLS_scaled_train.shape:", my_X_OLS_scaled_train.shape)
         # print("my_X_OLS_scaled_test.shape :", my_X_OLS_scaled_test.shape)
@@ -164,15 +167,16 @@ def part_a(seed):
     return
 
 
-def part_b():
+def part_b(seed):
     """
     Bias-variance, and resampling
     """
+    #! Make a figure similar to figure 2.11 of Hastie et al
     #* Declaring component variables and data
-    n_poly = np.arange(15)  # Polynomial sizes for the 2.11-replication plot
-    n_len = 1000            # Data point length/no. of observations
-    p_len = mf.compute_n_predictors_2dim(n_poly)
-    print(p_len)
+    n_polys = np.arange(32)  # Polynomial sizes for the 2.11-replication plot
+    n_len = 1000             # Data point length/no. of observations
+    p_len = np.array([mf.compute_n_predictors_2dim(n_p) for n_p in n_polys])
+    print(f"(b): p_len = {p_len}")
     # Base meshgrid data:
     x = np.sort(np.random.uniform(0, 1, n_len))
     y = np.sort(np.random.uniform(0, 1, n_len))
@@ -188,23 +192,47 @@ def part_b():
     z_data_1d = np.ravel(z)
     
     # Lists to store our results
-    X_o_list = []
-    beta_o_list = []
-    ztilde_o_list = []
+    X_dict      = {'train': {}, 'test': {}}
+    beta_dict   = {'train': {}, 'test': {}}
+    ztilde_dict = {'train': {}, 'test': {}}
+    mse_trains  = np.zeros(len(n_polys))
+    mse_tests   = np.zeros(len(n_polys))
+
     #* Create design matrices, betas, and predictions with varying degrees of polynomials
-    # OLS approach
-    for i in range(len(n_poly)):
-        X_o = mf.create_X_2dim(x_data_1d, y_data_1d, n_poly[i])
-        beta_o = mf.compute_beta_OLS(X_o, z_data_1d)
-        ztilde_o = X_o @ beta_o  # Predicted model's values
-        X_o_list.append(X_o)
-        beta_o_list.append(beta_o)
-        ztilde_o_list.append(ztilde_o)
+    for i in np.arange(len(n_polys)):
+        #- Create design matrix and split it
+        print(f"(b): In loop i = {i+1:>2} / {len(n_polys):<2} | {'~'+str(int(i/len(n_polys)*100)):>3}%")
+        X_to_split = mf.create_X_2dim(x_data_1d, y_data_1d, n_polys[i])
+        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=n_len, test_size=0.2, seed=seed)
+        X_train                 = X_to_split[train_inds]
+        X_test                  = X_to_split[test_inds ]
+        X_dict["train"][i]      = X_train
+        X_dict["test" ][i]      = X_test
+        # print(f"(b): X_train.shape = {str(X_train.shape):>10} --- (n_p={n_polys[i]:>2})")
+        # print(f"(b): X_test.shape  = {str(X_test.shape ):>10} --- (n_p={n_polys[i]:>2})")
+        #- Compute beta
+        beta_train              = mf.compute_beta_OLS(X_train, z_data_1d[train_inds])
+        beta_test               = mf.compute_beta_OLS(X_test,  z_data_1d[test_inds] )
+        beta_dict["train"][i]   = beta_train
+        beta_dict["test" ][i]   = beta_test
+        #- Compute the model's predicted output
+        ztilde_train            = X_train @ beta_train
+        ztilde_test             = X_test  @ beta_test
+        ztilde_dict["train"][i] = ztilde_train
+        ztilde_dict["test" ][i] = ztilde_test
+        #- Compute MSE
+        mse_trains[i] = mf.compute_MSE(z_data_1d[train_inds], ztilde_train)
+        mse_tests [i] = mf.compute_MSE(z_data_1d[test_inds ], ztilde_test )
         continue
 
-    #* 
-
-
+    # Now we can plot the MSEs against one another
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.plot(n_polys, mse_trains, label="Training sample")
+    ax.plot(n_polys, mse_tests , label="Testing sample" )
+    ax.legend(loc='best')
+    # plt.show()
+    save_fig("b - train-test MSE vs n_poly (similar to 2dot11 of Hastie)")
 
     pass
  
@@ -274,9 +302,9 @@ def main(seed):
 
 if __name__ == "__main__":
     # Where to save the figures and data files
+    FIGURE_ID        = "Results/FigureFiles"
     PROJECT_ROOT_DIR = "Results"
-    FIGURE_ID = "Results/FigureFiles"
-    DATA_ID = "DataFiles/"
+    DATA_ID          = "DataFiles/"
     seed = 4155
     np.random.seed(seed)
 
@@ -286,7 +314,8 @@ if __name__ == "__main__":
     if not os.path.exists(FIGURE_ID):
         os.mkdir(FIGURE_ID)
 
-    if not os.path.exists(DATA_ID):
-        os.mkdir(DATA_ID)
+    # if not os.path.exists(DATA_ID):
+    #     os.mkdir(DATA_ID)
+    
     main(seed)
     pass

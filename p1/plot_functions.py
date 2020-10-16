@@ -29,22 +29,31 @@ def plot_FrankeFunction(x_mg, y_mg, z_mg):
     pass
 
 
-def plot_MSE_1dataset(y_data, input_arrays, legend_list):
+def plot_MSE_comps(mse_, ytilde_arrays, legend_list):
     """
     Plots an MSE curve between two or more.
     Both args should be iterables.
     """
     # Declarations
-    num_arrays = len(input_arrays)
+    num_arrays = len(ytilde_arrays)
 
     # Creating plotted object
     fig = plt.figure()
     ax = fig.gca(projection='2d')
-    for y_array in np.arange(num_arrays):
-        # 
-        graph = ax.plot(np.arange(len(input_arrays)))
-        graph.xlabel("Polynomial complexity")
-        graph.ylabel("Prediction Error")
+
+    mse_
+
+
+
+    # for i in np.arange(num_arrays):
+    #     # 
+    #     graph = ax.plot(, input_arrays[i])
+    #     graph.xlabel("Polynomial complexity")
+    #     graph.ylabel("Prediction Error")
     
     
+    pass
+
+
+if __name__ == "__main__":
     pass

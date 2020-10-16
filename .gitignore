@@ -6,7 +6,7 @@ references/
 # Image files - when working with LaTeX projects, images may be cumbersome
 *.jpg
 *.jpeg
-*.png
+# *.png # keeping these for now, TeX file isn't finished yet. Remove this comment when done.
 
 # LaTeX
 *.aux
