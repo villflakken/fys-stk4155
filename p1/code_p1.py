@@ -67,7 +67,7 @@ def print_comparison_designX_details(X_mat, y_arr):
 *** Script flow
 """
 
-def part_a(seed):
+def part_a(seed, show_print=False):
     """
         Part a) of the assignment, or, alternatively:
     How to train your drago--- I mean, regression model
@@ -94,7 +94,8 @@ def part_a(seed):
     x_data_1d = np.ravel(x)
     y_data_1d = np.ravel(y)
     z_data_1d = np.ravel(z)
-
+    print("Z 1-DIM SHAPE:", z_data_1d.shape)
+    print("Z 2-DIM SHAPE:", z.shape)
     #* Make a plot to visualize z
     # pf.plot_FrankeFunction(x, y, z)
     # plt.show()
@@ -130,10 +131,8 @@ def part_a(seed):
     ztilde_OLS_scaled_Xtrain_btest = my_X_OLS_scaled_test @ beta_OLS_scaled_train 
     # ^ the last one's the one we're mostly interested in, I think
 
-    if True == 1:
-        print(f"(a):--- --- ---\n",
-            f"n_len   = {n_len}",
-            f"p_len   = {p_len}")
+    if show_print == True:
+        print(f"(a):--- --- ---\n")
         # print(" my_X:")
         # print("my_X_OLS_scaled_train.shape:", my_X_OLS_scaled_train.shape)
         # print("my_X_OLS_scaled_test.shape :", my_X_OLS_scaled_test.shape)
@@ -147,6 +146,8 @@ def part_a(seed):
         # print("ztilde_OLS_scaled_Xtest_btrain.shape:", ztilde_OLS_scaled_Xtest_btrain.shape)
         # print("ztilde_OLS_scaled_Xtrain_btest.shape:", ztilde_OLS_scaled_Xtrain_btest.shape)
         print(
+            f"n_len   = {n_len}",
+            f"p_len   = {p_len}",
             f"\n *** OLS: MSE & R2 measurements ***",
             f"\n  ( whole sample       /            straight ):",
             f"\n* MSE : {mf.compute_MSE(z_data_1d                , ztilde_OLS)}",
@@ -167,15 +168,16 @@ def part_a(seed):
     return
 
 
-def part_b(seed):
+def part_b(seed, show_print=False):
     """
     Bias-variance, and resampling
     """
     #! Make a figure similar to figure 2.11 of Hastie et al
     #* Declaring component variables and data
-    n_polys = np.arange(32)  # Polynomial sizes for the 2.11-replication plot
-    n_len = 1000             # Data point length/no. of observations
+    n_polys = np.arange(2**4)  # Polynomial sizes for the 2.11-replication plot
+    n_len = 1000               # Data point length/no. of observations
     p_len = np.array([mf.compute_n_predictors_2dim(n_p) for n_p in n_polys])
+    test_size = 0.2
     print(f"(b): p_len = {p_len}")
     # Base meshgrid data:
     x = np.sort(np.random.uniform(0, 1, n_len))
@@ -200,19 +202,22 @@ def part_b(seed):
 
     #* Create design matrices, betas, and predictions with varying degrees of polynomials
     for i in np.arange(len(n_polys)):
-        #- Create design matrix and split it
         print(f"(b): In loop i = {i+1:>2} / {len(n_polys):<2} | {'~'+str(int(i/len(n_polys)*100)):>3}%")
-        X_to_split = mf.create_X_2dim(x_data_1d, y_data_1d, n_polys[i])
-        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=n_len, test_size=0.2, seed=seed)
-        X_train                 = X_to_split[train_inds]
-        X_test                  = X_to_split[test_inds ]
-        X_dict["train"][i]      = X_train
-        X_dict["test" ][i]      = X_test
+        #- Create design matrix, scale it, and split it
+        X_original            = mf.create_X_2dim(x_data_1d, y_data_1d, n_polys[i])
+        X_scaled, z_scaled    = mf.my_little_scaler(X_original, z_data_1d)
+        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=n_len, test_size=test_size, seed=seed)
+        X_train               = X_scaled[train_inds]
+        X_test                = X_scaled[test_inds ]
+        z_scaled_data_train   = z_scaled[train_inds]
+        z_scaled_data_test    = z_scaled[test_inds ]
         # print(f"(b): X_train.shape = {str(X_train.shape):>10} --- (n_p={n_polys[i]:>2})")
         # print(f"(b): X_test.shape  = {str(X_test.shape ):>10} --- (n_p={n_polys[i]:>2})")
+        X_dict["train"][i]    = X_train
+        X_dict["test" ][i]    = X_test
         #- Compute beta
-        beta_train              = mf.compute_beta_OLS(X_train, z_data_1d[train_inds])
-        beta_test               = mf.compute_beta_OLS(X_test,  z_data_1d[test_inds] )
+        beta_train              = mf.compute_beta_OLS(X_train, z_scaled_data_train)
+        beta_test               = mf.compute_beta_OLS(X_test,  z_scaled_data_test )
         beta_dict["train"][i]   = beta_train
         beta_dict["test" ][i]   = beta_test
         #- Compute the model's predicted output
@@ -221,8 +226,25 @@ def part_b(seed):
         ztilde_dict["train"][i] = ztilde_train
         ztilde_dict["test" ][i] = ztilde_test
         #- Compute MSE
-        mse_trains[i] = mf.compute_MSE(z_data_1d[train_inds], ztilde_train)
-        mse_tests [i] = mf.compute_MSE(z_data_1d[test_inds ], ztilde_test )
+        mse_trains[i] = mf.compute_MSE(z_scaled_data_train, ztilde_train)
+        mse_tests [i] = mf.compute_MSE(z_scaled_data_test , ztilde_test )
+
+        if i == 5:
+            # shape_z_train = x[train_inds].shape
+            # print(X_train.shape, x.shape)
+            # print(shape_z_train)
+            # pf.plot_FrankeFunction(x[train_inds], y[train_inds], ztilde_train.reshape(shape_z_train))
+            # dummy = input("close plot and continue:")
+            # shape_z_test = x[test_inds].shape
+            # pf.plot_FrankeFunction(x[test_inds], y[test_inds], ztilde_test.reshape(shape_z_test))
+            # shape_z_train = x[train_inds].shape
+            # print(X_train.shape, x.shape)
+            # print(shape_z_train)
+            # pf.plot_FrankeFunction(x[train_inds], y[train_inds], ztilde_train.reshape(shape_z_train))
+            # dummy = input("close plot and continue:")
+            # shape_z_test = x[test_inds].shape
+            # pf.plot_FrankeFunction(x[test_inds], y[test_inds], ztilde_test.reshape(shape_z_test))
+            pass
         continue
 
     # Now we can plot the MSEs against one another
@@ -232,8 +254,8 @@ def part_b(seed):
     ax.plot(n_polys, mse_tests , label="Testing sample" )
     ax.legend(loc='best')
     # plt.show()
-    save_fig("b - train-test MSE vs n_poly (similar to 2dot11 of Hastie)")
-
+    # save_fig("b - train-test MSE vs n_poly (similar to 2dot11 of Hastie)")
+    plt.show()
     pass
  
 def part_c(seed):
@@ -292,8 +314,8 @@ def part_g(seed):
 def main(seed):
     """ Primary flow of this script """
     # Execution
-    part_a(seed)
-    part_b(seed)
+    # part_a(seed, show_print=0)
+    part_b(seed, show_print=1)
     # part_c(seed)
     # part_d(seed)
     # part_e(seed)
