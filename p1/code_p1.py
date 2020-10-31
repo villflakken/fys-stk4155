@@ -185,8 +185,8 @@ def part_b(seed, show_print=False):
     #! Make a figure similar to figure 2.11 of Hastie et al
     #* Declaring component variables and data
     test_size = 0.2
-    n_len     = 64             # Data point length/no. of observations
-    n_polys   = np.arange(16)  # Polynomial sizes for the 2.11-replication plot
+    n_len     = 20             # Data point length/no. of observations
+    n_polys   = np.arange(20)  # Polynomial sizes for the 2.11-replication plot
     p_len     = np.array([mf.compute_n_predictors_2dim(n_p) for n_p in n_polys])
     print(f"(b): p_len = {p_len}") # For my own benefit
     # Base meshgrid data:
@@ -194,7 +194,7 @@ def part_b(seed, show_print=False):
     y = np.sort(np.random.uniform(0, 1, n_len))
     x, y = np.meshgrid(x, y)
     # z's data w/noise:
-    sigma_noise, mu_noise = 0.25, 0
+    sigma_noise, mu_noise = 0.1, 0
     noise_z = sigma_noise*np.random.randn(n_len, n_len) + mu_noise
     z = mf.compute_FrankeFunction(x, y) + noise_z
 
@@ -241,11 +241,11 @@ def part_b(seed, show_print=False):
         mse_trains[i] = mf.compute_MSE(z_scaled_data_train, ztilde_train)
         mse_tests [i] = mf.compute_MSE(z_scaled_data_test , ztilde_test )
 
-        if i == 4:
-            train_inds_4 = train_inds
-        if i == 5:
-            train_inds_5 = train_inds
-            print("array_equal(train_inds_4, train_inds_5)? :=", np.array_equal(train_inds_4, train_inds_5))
+        # if i == 4:
+            # train_inds_4 = train_inds
+        # if i == 5:
+            # train_inds_5 = train_inds
+            # print("array_equal(train_inds_4, train_inds_5)? :=", np.array_equal(train_inds_4, train_inds_5))
 
             # shape_z_train = x[train_inds].shape
             # print(X_train.shape, x.shape)
@@ -261,7 +261,7 @@ def part_b(seed, show_print=False):
             # dummy = input("close plot and continue:")
             # shape_z_test = x[test_inds].shape
             # pf.plot_FrankeFunction(x[test_inds], y[test_inds], ztilde_test.reshape(shape_z_test))
-            pass
+            # pass
         continue
 
     # Now we can plot the MSEs against one another
@@ -340,8 +340,8 @@ def part_g(seed):
 def main(seed):
     """ Primary flow of this script """
     # Execution
-    part_a(seed, show_print=1)
-    # part_b(seed, show_print=1)
+    # part_a(seed, show_print=1)
+    part_b(seed, show_print=1)
     # part_c(seed)
     # part_d(seed)
     # part_e(seed)
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     PROJECT_ROOT_DIR = project_path+"/Results"
     FIGURE_ID        = project_path+"/Results/FigureFiles"
     DATA_ID          = project_path+"/DataFiles/"
-    seed = 4155
+    seed = 2022 #4155
     np.random.seed(seed)
 
     if not os.path.exists(PROJECT_ROOT_DIR):
