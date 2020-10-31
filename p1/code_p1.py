@@ -77,9 +77,9 @@ def part_a(seed, show_print=False):
     actually caused me headaches later.
     """
     #* Declaring component variables and data
-    n_poly = 5      # Polynomial size
-    n_len  = 1000   # Data point length/no. of observations
-    p_len = mf.compute_n_predictors_2dim(n_poly)
+    n_poly = 2      # Polynomial size
+    n_len  = 3   # Data point length/no. of observations
+    p_len = mf.compute_n_predictors_2dim(n_poly) # Decided I want this defined outside, as well
     # n_data_dimensions = 2   # used in an earlier, more ambitious version
     # Base meshgrid data:
     x = np.sort(np.random.uniform(0, 1, n_len))
@@ -102,6 +102,16 @@ def part_a(seed, show_print=False):
 
     #* Create design matrix and beta
     my_X = mf.create_X_2dim(x_data_1d, y_data_1d, n_poly)
+    print("\n\n\n ***   ***   ***: X.shape:", my_X.shape)
+    for i in range(len(my_X)):
+        print(my_X[i,:])
+        continue
+    print("***   ***   ***\n\n\n")
+    for i in range(1, len(my_X)):
+        print(f"row {i-1} equal {i+1}?: {np.array_equal(my_X[i-1,:], my_X[i,:])}")
+        continue
+    print("***   ***   ***\n\n\n")
+    
     my_X_OLS = my_X.copy()
     print(f"(a): X.shape = {my_X_OLS.shape}")
     # ^ Declare a copy of X as a precaution, so the original is not 
@@ -174,11 +184,11 @@ def part_b(seed, show_print=False):
     """
     #! Make a figure similar to figure 2.11 of Hastie et al
     #* Declaring component variables and data
-    n_polys = np.arange(2**4)  # Polynomial sizes for the 2.11-replication plot
-    n_len = 1000               # Data point length/no. of observations
-    p_len = np.array([mf.compute_n_predictors_2dim(n_p) for n_p in n_polys])
     test_size = 0.2
-    print(f"(b): p_len = {p_len}")
+    n_len     = 64             # Data point length/no. of observations
+    n_polys   = np.arange(16)  # Polynomial sizes for the 2.11-replication plot
+    p_len     = np.array([mf.compute_n_predictors_2dim(n_p) for n_p in n_polys])
+    print(f"(b): p_len = {p_len}") # For my own benefit
     # Base meshgrid data:
     x = np.sort(np.random.uniform(0, 1, n_len))
     y = np.sort(np.random.uniform(0, 1, n_len))
@@ -202,24 +212,26 @@ def part_b(seed, show_print=False):
 
     #* Create design matrices, betas, and predictions with varying degrees of polynomials
     for i in np.arange(len(n_polys)):
+        n_p = n_polys[i]
         print(f"(b): In loop i = {i+1:>2} / {len(n_polys):<2} | {'~'+str(int(i/len(n_polys)*100)):>3}%")
         #- Create design matrix, scale it, and split it
-        X_original            = mf.create_X_2dim(x_data_1d, y_data_1d, n_polys[i])
+        X_original            = mf.create_X_2dim(x_data_1d, y_data_1d, n_p)
         X_scaled, z_scaled    = mf.my_little_scaler(X_original, z_data_1d)
-        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=n_len, test_size=test_size, seed=seed)
+        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=len(X_scaled), test_size=test_size, seed=seed)
         X_train               = X_scaled[train_inds]
         X_test                = X_scaled[test_inds ]
         z_scaled_data_train   = z_scaled[train_inds]
         z_scaled_data_test    = z_scaled[test_inds ]
-        # print(f"(b): X_train.shape = {str(X_train.shape):>10} --- (n_p={n_polys[i]:>2})")
-        # print(f"(b): X_test.shape  = {str(X_test.shape ):>10} --- (n_p={n_polys[i]:>2})")
         X_dict["train"][i]    = X_train
         X_dict["test" ][i]    = X_test
+        # print(f"(b): X_original.shape = {str(X_original.shape):>10} --- (n_p={n_p:>2})")
+        # print(f"(b): X_train.shape    = {str(X_train.shape):>10} --- (n_p={n_p:>2})")
+        # print(f"(b): X_test.shape     = {str(X_test.shape ):>10} --- (n_p={n_p:>2})")
         #- Compute beta
-        beta_train              = mf.compute_beta_OLS(X_train, z_scaled_data_train)
-        beta_test               = mf.compute_beta_OLS(X_test,  z_scaled_data_test )
-        beta_dict["train"][i]   = beta_train
-        beta_dict["test" ][i]   = beta_test
+        beta_train            = mf.compute_beta_OLS(X_train, z_scaled_data_train)
+        beta_test             = mf.compute_beta_OLS(X_test,  z_scaled_data_test )
+        beta_dict["train"][i] = beta_train
+        beta_dict["test" ][i] = beta_test
         #- Compute the model's predicted output
         ztilde_train            = X_train @ beta_train
         ztilde_test             = X_test  @ beta_test
@@ -229,7 +241,12 @@ def part_b(seed, show_print=False):
         mse_trains[i] = mf.compute_MSE(z_scaled_data_train, ztilde_train)
         mse_tests [i] = mf.compute_MSE(z_scaled_data_test , ztilde_test )
 
+        if i == 4:
+            train_inds_4 = train_inds
         if i == 5:
+            train_inds_5 = train_inds
+            print("array_equal(train_inds_4, train_inds_5)? :=", np.array_equal(train_inds_4, train_inds_5))
+
             # shape_z_train = x[train_inds].shape
             # print(X_train.shape, x.shape)
             # print(shape_z_train)
@@ -253,11 +270,16 @@ def part_b(seed, show_print=False):
     ax.plot(n_polys, mse_trains, label="Training sample")
     ax.plot(n_polys, mse_tests , label="Testing sample" )
     ax.legend(loc='best')
-    # plt.show()
-    # save_fig("b - train-test MSE vs n_poly (similar to 2dot11 of Hastie)")
+    save_fig("b - train-test MSE vs n_poly (similar to 2dot11 of Hastie)")
     plt.show()
+
+    #* Let's make a confidence interval for the training and test models
+    # mf.confidence_interval_sample(X_mat=, beta, y_data, ytilde, n_len, p_len,
+    #                               bool_print_loop=False)
+
     pass
- 
+
+
 def part_c(seed):
     """
     Script to execute this part.
@@ -277,7 +299,8 @@ def part_c(seed):
 
     # Operations complete!
     pass
- 
+
+
 def part_d(seed):
     """
     Script to execute this part.
@@ -286,6 +309,7 @@ def part_d(seed):
     # Operations complete!
     pass
  
+
 def part_e(seed):
     """
     Script to execute this part.
@@ -293,7 +317,8 @@ def part_e(seed):
 
     # Operations complete!
     pass
- 
+
+
 def part_f(seed):
     """
     Script to execute this part.
@@ -301,7 +326,8 @@ def part_f(seed):
 
     # Operations complete!
     pass
- 
+
+
 def part_g(seed):
     """
     Script to execute this part.
@@ -314,19 +340,21 @@ def part_g(seed):
 def main(seed):
     """ Primary flow of this script """
     # Execution
-    # part_a(seed, show_print=0)
-    part_b(seed, show_print=1)
+    part_a(seed, show_print=1)
+    # part_b(seed, show_print=1)
     # part_c(seed)
     # part_d(seed)
     # part_e(seed)
     # part_f(seed)
     # part_g(seed)
 
+
 if __name__ == "__main__":
     # Where to save the figures and data files
-    FIGURE_ID        = "Results/FigureFiles"
-    PROJECT_ROOT_DIR = "Results"
-    DATA_ID          = "DataFiles/"
+    project_path = os.path.dirname(__file__) 
+    PROJECT_ROOT_DIR = project_path+"/Results"
+    FIGURE_ID        = project_path+"/Results/FigureFiles"
+    DATA_ID          = project_path+"/DataFiles/"
     seed = 4155
     np.random.seed(seed)
 
