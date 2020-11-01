@@ -129,9 +129,9 @@ def part_a(seed, show_print=False):
     my_X_OLS_scaled = mf.my_little_scaler(my_X)
 
     my_X_OLS_scaled_train, my_X_OLS_scaled_test, \
-        z_scaled_train, z_scaled_test,           \
-        train_indexes, test_indexes =            \
-            mf.my_train_test_splitter(my_X_OLS_scaled, z_scaled, test_size=0.2, seed=seed)
+        z_scaled_train,    z_scaled_test,        \
+        train_indexes,     test_indexes          \
+        = mf.my_train_test_splitter(my_X_OLS_scaled, z_data_1d, test_size=0.2, seed=seed)
     # Some obvious constructs to make
     beta_OLS_scaled_train = mf.compute_beta_OLS(my_X_OLS_scaled_train, z_scaled_train)
     beta_OLS_scaled_test  = mf.compute_beta_OLS(my_X_OLS_scaled_test , z_scaled_test )
@@ -176,7 +176,6 @@ def part_a(seed, show_print=False):
             f"\n* MSE : {mf.compute_MSE(z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}",
             f"\n* R2  : {mf.compute_R2( z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}\n")
         pass
-    return
 
 
 def part_b(seed, show_print=False):

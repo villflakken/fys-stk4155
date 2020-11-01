@@ -128,7 +128,7 @@ def compute_train_test_indexes(n_rows, test_size=0.2, seed=None):
     """
     indexes = np.arange(n_rows)
     # Create row indeces and shuffle them
-    if seed != None:
+    if seed is not None:
         np.random.seed(seed)
         pass
     np.random.shuffle(indexes)
@@ -184,9 +184,9 @@ def confidence_interval_sample(X_mat, beta, y_data, ytilde, n_len, p_len,
 
 def my_Ridge_regression(X_mat, y_arr, lambda_):
     """
-    Executes a Ridge regression, 
+    Executes a Ridge regression,
         introducing the infinitessimal term lamb as a so-called
-        ridge hyperparameter, in order to construct beta, 
+        ridge hyperparameter, in order to construct beta,
         and by extension the array of predicted values.
     """
     XTX = X_mat.T @ X_mat
