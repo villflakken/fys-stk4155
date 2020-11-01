@@ -105,7 +105,7 @@ def my_train_test_splitter(X_mat, y_arr, test_size=0.2, seed=None):
     n_rows = y_arr.size
     indexes = np.arange(n_rows)
     # Create row indeces and shuffle them
-    if seed != None:
+    if seed is not None:
         np.random.seed(seed)
         pass
     np.random.shuffle(indexes)

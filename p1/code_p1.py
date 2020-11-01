@@ -169,12 +169,13 @@ def part_a(seed, show_print=False):
             f"\n  ( testing subsample  /            straight ):",
             f"\n* MSE : {mf.compute_MSE(z_data_1d[test_indexes ] , ztilde_OLS_scaled_test)}",
             f"\n* R2  : {mf.compute_R2( z_data_1d[test_indexes ] , ztilde_OLS_scaled_test)}\n",
-            f"\n  ( training subsample / X_test @ beta_train ):",
+            f"\n  ( X_test @ beta_train ):",
             f"\n* MSE : {mf.compute_MSE(z_data_1d[train_indexes] , ztilde_OLS_scaled_Xtest_btrain)}",
             f"\n* R2  : {mf.compute_R2( z_data_1d[train_indexes] , ztilde_OLS_scaled_Xtest_btrain)}",
-            f"\n  ( testing subsample  / X_train @ beta_test ):",
-            f"\n* MSE : {mf.compute_MSE(z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}",
-            f"\n* R2  : {mf.compute_R2( z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}\n")
+            # f"\n  ( X_train @ beta_test ):",
+            # f"\n* MSE : {mf.compute_MSE(z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}",
+            # f"\n* R2  : {mf.compute_R2( z_data_1d[test_indexes ] , ztilde_OLS_scaled_Xtrain_btest)}\n"
+            )
         pass
 
 
@@ -216,20 +217,20 @@ def part_b(seed, show_print=False):
         n_p = n_polys[i]
         print(f"(b): In loop i = {i+1:>2} / {len(n_polys):<2} | {'~'+str(int(i/len(n_polys)*100)):>3}%")
         #? Create design matrix, scale it, and split it
-        X_original            = mf.create_X_2dim(x_data_1d, y_data_1d, n_p)
-        X_scaled              = mf.my_little_scaler(X_original)
+        X_original    = mf.create_X_2dim(x_data_1d, y_data_1d, n_p)
+        X_scaled      = mf.my_little_scaler(X_original)
         # Train
-        z_data_train          = z_data_1d[train_inds]
-        X_train               = X_scaled[train_inds]
-        beta_train            = mf.compute_beta_OLS(X_train, z_data_train)
-        ztilde_train          = X_train @ beta_train
-        mse_trains[i]         = mf.compute_MSE(z_data_train, ztilde_train)
+        z_data_train  = z_data_1d[train_inds]
+        X_train       = X_scaled[train_inds]
+        beta_train    = mf.compute_beta_OLS(X_train, z_data_train)
+        ztilde_train  = X_train @ beta_train
+        mse_trains[i] = mf.compute_MSE(z_data_train, ztilde_train)
         # Test
-        z_data_test           = z_data_1d[test_inds]
-        X_test                = X_scaled[test_inds]
-        beta_test             = mf.compute_beta_OLS(X_test,  z_data_test )
-        ztilde_test           = X_test @ beta_train
-        mse_tests [i]         = mf.compute_MSE(z_data_test, ztilde_test )
+        z_data_test   = z_data_1d[test_inds]
+        X_test        = X_scaled[test_inds]
+        beta_test     = mf.compute_beta_OLS(X_test,  z_data_test )
+        ztilde_test   = X_test @ beta_train
+        mse_tests [i] = mf.compute_MSE(z_data_test, ztilde_test )
         # Storage
         X_dict["train"][i]      = X_train
         X_dict["test" ][i]      = X_test
