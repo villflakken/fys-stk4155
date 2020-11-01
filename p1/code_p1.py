@@ -138,8 +138,8 @@ def part_a(seed, show_print=False):
     ztilde_OLS_scaled_train = my_X_OLS_scaled_train @ beta_OLS_scaled_train
     ztilde_OLS_scaled_test  = my_X_OLS_scaled_test  @ beta_OLS_scaled_test
     # The tiny test
-    ztilde_OLS_scaled_Xtest_btrain = my_X_OLS_scaled_train @ beta_OLS_scaled_test
-    ztilde_OLS_scaled_Xtrain_btest = my_X_OLS_scaled_test @ beta_OLS_scaled_train 
+    ztilde_OLS_scaled_Xtrain_btest = my_X_OLS_scaled_train @ beta_OLS_scaled_test
+    ztilde_OLS_scaled_Xtest_btrain = my_X_OLS_scaled_test @ beta_OLS_scaled_train 
     # ^ the last one's the one we're mostly interested in, I think
 
     if show_print == True:
