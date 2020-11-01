@@ -81,17 +81,17 @@ def create_X_2dim(x, y, n_poly):
     return X
 
 
-def my_little_scaler(input_matrix, input_array):
+def my_little_scaler(input_matrix):#, input_array):
     """
     Inspired from the documentation of SKL, I wrote this instead,
     to avoid potential problems related to singular matrices.
     """
     output_matrix = input_matrix.copy()
-    output_array = input_array.copy()
+    # output_array = input_array.copy()
     # The omitted column should only contain the number 1.
     output_matrix[:, 1:] -= output_matrix[:, 1:].mean(axis=0)
-    output_array -= output_array.mean()
-    return output_matrix, output_array
+    # output_array -= output_array.mean()
+    return output_matrix#, output_array
 
 
 def my_train_test_splitter(X_mat, y_arr, test_size=0.2, seed=None):

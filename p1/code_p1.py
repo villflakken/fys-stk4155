@@ -33,7 +33,7 @@ def save_fig(fig_id):
 
 
 def print_comparison_designX_details(X_mat, y_arr):
-    """ 
+    """
     Methods and measurements used to compare my own implementations against.
     """
     print("\nDetails pertaining to the Design Matrix & Linear Regression (for comparison)")
@@ -51,7 +51,7 @@ def print_comparison_designX_details(X_mat, y_arr):
     scaler.fit(X_train)
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    
+
     print("Feature min values before scaling:\n {}".format(X_train.min(axis=0)))
     print("Feature max values before scaling:\n {}".format(X_train.max(axis=0)))
     print("Feature min values after scaling:\n {}".format(X_train_scaled.min(axis=0)))
@@ -89,7 +89,7 @@ def part_a(seed, show_print=False):
     sigma_noise, mu_noise = 0.25, 0
     noise_z = sigma_noise*np.random.randn(n_len, n_len) + mu_noise
     z = mf.compute_FrankeFunction(x, y) + noise_z
-    
+
     #* Need those flattened 1d arrays later, though!:
     x_data_1d = np.ravel(x)
     y_data_1d = np.ravel(y)
@@ -111,10 +111,10 @@ def part_a(seed, show_print=False):
         print(f"row {i-1} equal {i+1}?: {np.array_equal(my_X[i-1,:], my_X[i,:])}")
         continue
     print("***   ***   ***\n\n\n")
-    
+
     my_X_OLS = my_X.copy()
     print(f"(a): X.shape = {my_X_OLS.shape}")
-    # ^ Declare a copy of X as a precaution, so the original is not 
+    # ^ Declare a copy of X as a precaution, so the original is not
     #     perturbed/modified unintended w.r.t. view/scope in functions.
     beta_OLS = mf.compute_beta_OLS(X_mat=my_X_OLS, y_arr=z_data_1d)
     ztilde_OLS = my_X_OLS @ beta_OLS # predicted model's values
@@ -125,7 +125,8 @@ def part_a(seed, show_print=False):
                                 n_len, p_len)#, bool_print_loop=True)
 
     #* Again, but w/scaling & train/test-splitting the design matrix
-    my_X_OLS_scaled, z_scaled = mf.my_little_scaler(my_X, z_data_1d)
+    # my_X_OLS_scaled, z_scaled = mf.my_little_scaler(my_X, z_data_1d)
+    my_X_OLS_scaled = mf.my_little_scaler(my_X)
 
     my_X_OLS_scaled_train, my_X_OLS_scaled_test, \
         z_scaled_train, z_scaled_test,           \
@@ -202,7 +203,7 @@ def part_b(seed, show_print=False):
     x_data_1d = np.ravel(x)
     y_data_1d = np.ravel(y)
     z_data_1d = np.ravel(z)
-    
+
     # Lists to store our results
     X_dict      = {'train': {}, 'test': {}}
     beta_dict   = {'train': {}, 'test': {}}
@@ -211,57 +212,32 @@ def part_b(seed, show_print=False):
     mse_tests   = np.zeros(len(n_polys))
 
     #* Create design matrices, betas, and predictions with varying degrees of polynomials
+    train_inds, test_inds = mf.compute_train_test_indexes(n_rows=n_len*n_len, test_size=test_size, seed=seed)
     for i in np.arange(len(n_polys)):
         n_p = n_polys[i]
         print(f"(b): In loop i = {i+1:>2} / {len(n_polys):<2} | {'~'+str(int(i/len(n_polys)*100)):>3}%")
-        #- Create design matrix, scale it, and split it
+        #? Create design matrix, scale it, and split it
         X_original            = mf.create_X_2dim(x_data_1d, y_data_1d, n_p)
-        X_scaled, z_scaled    = mf.my_little_scaler(X_original, z_data_1d)
-        train_inds, test_inds = mf.compute_train_test_indexes(n_rows=len(X_scaled), test_size=test_size, seed=seed)
+        X_scaled              = mf.my_little_scaler(X_original)
+        # Train
+        z_data_train          = z_data_1d[train_inds]
         X_train               = X_scaled[train_inds]
-        X_test                = X_scaled[test_inds ]
-        z_scaled_data_train   = z_scaled[train_inds]
-        z_scaled_data_test    = z_scaled[test_inds ]
-        X_dict["train"][i]    = X_train
-        X_dict["test" ][i]    = X_test
-        # print(f"(b): X_original.shape = {str(X_original.shape):>10} --- (n_p={n_p:>2})")
-        # print(f"(b): X_train.shape    = {str(X_train.shape):>10} --- (n_p={n_p:>2})")
-        # print(f"(b): X_test.shape     = {str(X_test.shape ):>10} --- (n_p={n_p:>2})")
-        #- Compute beta
-        beta_train            = mf.compute_beta_OLS(X_train, z_scaled_data_train)
-        beta_test             = mf.compute_beta_OLS(X_test,  z_scaled_data_test )
-        beta_dict["train"][i] = beta_train
-        beta_dict["test" ][i] = beta_test
-        #- Compute the model's predicted output
-        ztilde_train            = X_train @ beta_train
-        ztilde_test             = X_test  @ beta_test
+        beta_train            = mf.compute_beta_OLS(X_train, z_data_train)
+        ztilde_train          = X_train @ beta_train
+        mse_trains[i]         = mf.compute_MSE(z_data_train, ztilde_train)
+        # Test
+        z_data_test           = z_data_1d[test_inds]
+        X_test                = X_scaled[test_inds]
+        beta_test             = mf.compute_beta_OLS(X_test,  z_data_test )
+        ztilde_test           = X_test @ beta_train
+        mse_tests [i]         = mf.compute_MSE(z_data_test, ztilde_test )
+        # Storage
+        X_dict["train"][i]      = X_train
+        X_dict["test" ][i]      = X_test
+        beta_dict["train"][i]   = beta_train
+        beta_dict["test" ][i]   = beta_test
         ztilde_dict["train"][i] = ztilde_train
         ztilde_dict["test" ][i] = ztilde_test
-        #- Compute MSE
-        mse_trains[i] = mf.compute_MSE(z_scaled_data_train, ztilde_train)
-        mse_tests [i] = mf.compute_MSE(z_scaled_data_test , ztilde_test )
-
-        # if i == 4:
-            # train_inds_4 = train_inds
-        # if i == 5:
-            # train_inds_5 = train_inds
-            # print("array_equal(train_inds_4, train_inds_5)? :=", np.array_equal(train_inds_4, train_inds_5))
-
-            # shape_z_train = x[train_inds].shape
-            # print(X_train.shape, x.shape)
-            # print(shape_z_train)
-            # pf.plot_FrankeFunction(x[train_inds], y[train_inds], ztilde_train.reshape(shape_z_train))
-            # dummy = input("close plot and continue:")
-            # shape_z_test = x[test_inds].shape
-            # pf.plot_FrankeFunction(x[test_inds], y[test_inds], ztilde_test.reshape(shape_z_test))
-            # shape_z_train = x[train_inds].shape
-            # print(X_train.shape, x.shape)
-            # print(shape_z_train)
-            # pf.plot_FrankeFunction(x[train_inds], y[train_inds], ztilde_train.reshape(shape_z_train))
-            # dummy = input("close plot and continue:")
-            # shape_z_test = x[test_inds].shape
-            # pf.plot_FrankeFunction(x[test_inds], y[test_inds], ztilde_test.reshape(shape_z_test))
-            # pass
         continue
 
     # Now we can plot the MSEs against one another
@@ -277,28 +253,25 @@ def part_b(seed, show_print=False):
     # mf.confidence_interval_sample(X_mat=, beta, y_data, ytilde, n_len, p_len,
     #                               bool_print_loop=False)
 
-    pass
-
 
 def part_c(seed):
     """
     Script to execute this part.
     """
 
-    lambda_ = 0.1
-    #   - Ridge
-    # my_XTX_Ridge, beta_Ridge, ztilde_Ridge = my_Ridge_regression(X_ols, z_data_1d, lambda_)
-    X_r = X.copy()
-    XTX = X_r.T @ X_r
-    n_XTX = len(XTX)
-    XTX_Ridge = np.linalg.pinv(XTX + lambda_*np.identity(n_XTX))
-    beta_Ridge = XTX_Ridge @ X_r.T @ z_data_1d
-    ztilde_Ridge = X_r @ beta_Ridge
+    # lambda_ = 0.1
+    # #   - Ridge
+    # # my_XTX_Ridge, beta_Ridge, ztilde_Ridge = my_Ridge_regression(X_ols, z_data_1d, lambda_)
+    # X_r = X.copy()
+    # XTX = X_r.T @ X_r
+    # n_XTX = len(XTX)
+    # XTX_Ridge = np.linalg.pinv(XTX + lambda_*np.identity(n_XTX))
+    # beta_Ridge = XTX_Ridge @ X_r.T @ z_data_1d
+    # ztilde_Ridge = X_r @ beta_Ridge
 
-    MSE_Ridge = mf.compute_MSE(z_data_1d, ztilde_Ridge)
+    # MSE_Ridge = mf.compute_MSE(z_data_1d, ztilde_Ridge)
 
-    # Operations complete!
-    pass
+    # # Operations complete!
 
 
 def part_d(seed):
@@ -307,8 +280,7 @@ def part_d(seed):
     """
 
     # Operations complete!
-    pass
- 
+
 
 def part_e(seed):
     """
@@ -316,7 +288,6 @@ def part_e(seed):
     """
 
     # Operations complete!
-    pass
 
 
 def part_f(seed):
@@ -325,7 +296,6 @@ def part_f(seed):
     """
 
     # Operations complete!
-    pass
 
 
 def part_g(seed):
@@ -334,9 +304,8 @@ def part_g(seed):
     """
 
     # Operations complete!
-    pass
 
- 
+
 def main(seed):
     """ Primary flow of this script """
     # Execution
@@ -351,11 +320,11 @@ def main(seed):
 
 if __name__ == "__main__":
     # Where to save the figures and data files
-    project_path = os.path.dirname(__file__) 
+    project_path = os.path.dirname(__file__)
     PROJECT_ROOT_DIR = project_path+"/Results"
     FIGURE_ID        = project_path+"/Results/FigureFiles"
     DATA_ID          = project_path+"/DataFiles/"
-    seed = 2022 #4155
+    seed = 4155
     np.random.seed(seed)
 
     if not os.path.exists(PROJECT_ROOT_DIR):
@@ -366,6 +335,5 @@ if __name__ == "__main__":
 
     # if not os.path.exists(DATA_ID):
     #     os.mkdir(DATA_ID)
-    
+
     main(seed)
-    pass

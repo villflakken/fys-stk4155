@@ -2,7 +2,6 @@ import os
 import sys
 import pretty_errors  # available with pip via `pip install pretty_errors`
 import numpy as np
-import math_functions as mf
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
 from mpl_toolkits.mplot3d import Axes3D
