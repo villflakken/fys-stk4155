@@ -82,7 +82,22 @@ def create_X_2dim(x, y, n_poly):
 
 def create_X_2dim_test():
     print("Testing 'create_X_2dim'")
-    #create_X_2dim()
+
+    X = create_X_2dim(np.array([1,2]), np.array([1,2]), 0)
+    expected_X = np.array([[1.],[1.]])
+    if (not np.array_equal(X,expected_X)):
+        raise Exception("Failed test: expected \nX([1,2],[1,2],0) to be \n"+str(expected_X)+", but was \n" + str(X))
+
+    X = create_X_2dim(np.array([1,2]), np.array([1,2]), 2)
+    expected_X = np.array([[1., 1., 1., 1., 1., 1.],[1., 2., 2., 4., 4., 4.]])
+    if (not np.array_equal(X,expected_X)):
+        raise Exception("Failed test: expected \nX([1,2],[1,2],2) to be \n"+str(expected_X)+", but was \n" + str(X))
+
+    X = create_X_2dim(np.array([1,2,3,4,5,6]), np.array([1,2,3,4,5,6]), 0)
+    expected_X = np.array([[1.],[1.],[1.],[1.],[1.],[1.]])
+    if (not np.array_equal(X,expected_X)):
+        raise Exception("Failed test: expected \nX([1,2,3,4,5,6],[1,2,3,4,5,6],0) to be \n"+str(expected_X)+", but was \n" + str(X))
+
     print("Passed all tests 'create_X_2dim'")
     return
 
@@ -94,10 +109,28 @@ def my_little_scaler(input_matrix, input_array):
     output_matrix = input_matrix.copy()
     output_array = input_array.copy()
     # The omitted column should only contain the number 1.
+    #output_matrix[:, 1:] = output_matrix[:, 1:] - output_matrix[:, 1:].mean(axis=0)
     output_matrix[:, 1:] -= output_matrix[:, 1:].mean(axis=0)
     output_array -= output_array.mean()
     return output_matrix, output_array
 
+def my_little_scaler_test():
+    print("Testing 'my_little_scaler'")
+
+    result_matrix, result_array = my_little_scaler(np.array([[1.,0.],[0.,1.]]), np.array([1.,1.]))
+    expected_result_matrix, expected_result_array = np.array([[1.,-0.5],[0.,0.5]]), np.array([0.,0.])
+    if (not np.array_equal(result_matrix, expected_result_matrix)) \
+        or (not np.array_equal(result_array, expected_result_array)):
+        raise Exception("Failed test: expected \nscaler([[1.,0.],[0.,1.]],[1.,1.]) to be \n"+str(expected_result_matrix)+str(expected_result_array)+", but was \n"+str(result_matrix)+str(result_array))
+
+    result_matrix, result_array = my_little_scaler(np.array([[1.,1.,1.,1.,1.,1.],[1.,2.,2.,4.,4.,4.]]), np.array([1.,2.,3.,4.,5.,6.]))
+    expected_result_matrix, expected_result_array = np.array([[1.,-0.5,-0.5,-1.5,-1.5,-1.5],[1.,0.5,0.5,1.5,1.5,1.5]]), np.array([1.,2.,3.,4.,5.,6.])-21/6.
+    if (not np.array_equal(result_matrix, expected_result_matrix)) \
+        or (not np.array_equal(result_array, expected_result_array)):
+        raise Exception("Failed test: expected \nscaler([[1.,1.,1.,1.,1.,1.],[1.,2.,2.,4.,4.,4.]],[1.,2.,3.,4.,5.,6.]) to be \n"+str(expected_result_matrix)+str(expected_result_array)+", but was \n"+str(result_matrix)+str(result_array))
+
+    print("Passed all tests 'my_little_scaler'")
+    return
 
 def my_train_test_splitter(X_mat, y_arr, test_size=0.2, seed=None):
     """
@@ -147,6 +180,26 @@ def compute_train_test_indexes(n_rows, test_size=0.2, seed=None):
 def compute_beta_OLS(X_mat, y_arr):
     """ Matrix operations to find beta and ytilde """
     return np.linalg.pinv(X_mat.T @ X_mat) @ X_mat.T @ y_arr
+
+def compute_beta_OLS_test():
+    print("Testing 'compute_beta_OLS'")
+    
+    input_x_mat = np.array([[1,0],[0,1]])
+    input_y_arr = np.array([1,1]) 
+    result = compute_beta_OLS(input_x_mat, input_y_arr)
+    expected_result = np.array([1,1])
+    if not np.array_equal(result, expected_result):
+        raise Exception("Failed test: expected compute_beta_OLS(\n"+ str(input_x_mat) +",\n"+ str(input_y_arr) +") to be \n" + str(expected_result) + " but was \n" + str(result))
+    
+    input_x_mat = np.array([[1,0],[3,4]])
+    input_y_arr = np.array([1,2]) 
+    result = compute_beta_OLS(input_x_mat, input_y_arr)
+    expected_result = np.array([1,-0.25])
+    if not np.array_equal(result, expected_result):
+        raise Exception("Failed test: expected compute_beta_OLS(\n"+ str(input_x_mat) +",\n"+ str(input_y_arr) +") to be \n" + str(expected_result) + " but was \n" + str(result))
+    
+    print("Passed all tests 'compute_beta_OLS'")
+    return
 
 
 def compute_variance_sample(vec_data, vec_model, n_len, p_len):
@@ -203,3 +256,5 @@ def my_Ridge_regression(X_mat, y_arr, lambda_):
 
 if __name__ == "__main__" and "test" in list(sys.argv):
     create_X_2dim_test()    
+    my_little_scaler_test()
+    compute_beta_OLS_test()
