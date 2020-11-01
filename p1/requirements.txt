@@ -1,0 +1,7 @@
+#python dependencies as a pip-requirement-file, see https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format
+pandas
+numpy
+pretty_errors
+matplotlib
+scipy
+sklearn

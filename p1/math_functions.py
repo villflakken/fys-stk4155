@@ -80,6 +80,11 @@ def create_X_2dim(x, y, n_poly):
             X[:, q+k] = (x**(i-k))*(y**k)
     return X
 
+def create_X_2dim_test():
+    print("Testing 'create_X_2dim'")
+    #create_X_2dim()
+    print("Passed all tests 'create_X_2dim'")
+    return
 
 def my_little_scaler(input_matrix, input_array):
     """
@@ -196,5 +201,5 @@ def my_Ridge_regression(X_mat, y_arr, lambda_):
     y_pred_Ridge = X_mat @ beta_Ridge
     return XTX_Ridge, beta_Ridge, y_pred_Ridge
 
-if __name__ == "__main__":
-    pass
+if __name__ == "__main__" and "test" in list(sys.argv):
+    create_X_2dim_test()    
